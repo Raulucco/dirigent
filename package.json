@@ -1,0 +1,23 @@
+{
+    "name": "mgs-orchestrator",
+    "version": "1.0.0",
+    "description": "run ",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "scripts:task": "./scripts-orchestrator.js"
+    },
+    "bin": {
+        "orchestrator": "./index.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "webpack": "^1.11.0"
+    },
+    "dependencies": {
+        "node-sass": "^3.2.0",
+        "prompt": "^0.2.14",
+        "q": "^1.4.1"
+    }
+}

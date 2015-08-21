@@ -1,0 +1,54 @@
+'use strict';
+var fs = require('fs');
+var path = require('path');
+var q = require('q');
+var args = process.argv.slice(1);
+var DEFAULT_CONFIG_FILE_NAME = require('./files.js').styles;
+var sass = require('node-sass');
+var configFile;
+var customConfigFile = path.join(process.cwd(), args[0] || DEFAULT_CONFIG_FILE_NAME);
+
+fs.exists(customConfigFile, function (exists) {
+    if (exists) {
+        configFile = require(customConfigFile);
+    } else {
+        configFile = require('./' + DEFAULT_CONFIG_FILE_NAME);
+    }
+
+    run();
+});
+
+function run () {
+    sass.render(configFile, function (err, result) {
+        if (err) {
+            notifyError(err);
+            return;
+        }
+        writeOutputFile(result);
+
+    });
+}
+
+function notifyError (err) {
+
+}
+
+function writeOutputFile (result) {
+    var cssFileDefer = q.defer();
+    var mapFileDefer = q.defer();
+    q.ncall(fs.writeFile(result.css)).then(function (result) {
+        cssFileDefer.resolve(result);
+    }, function (err) {
+        cssFileDefer.reject(err);
+    });
+
+    q.ncall(fs.writeFile(result.map)).then(function (result) {
+        mapFileDefer.resolve(resolve);
+    }, function (err) {
+        mapFileDefer.reject(err);
+    });
+
+    q.all([cssFileDefer.promise, mapFileDefer.promise]).then(function () {
+        console.log('Hurra');
+    });
+}
