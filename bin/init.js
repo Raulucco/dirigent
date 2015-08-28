@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 'use strict';
 
 var fs = require('fs');
@@ -71,7 +73,7 @@ function createScriptsConfFile() {
             }
         };
 
-        fs.writeFile(path.join(cwd, defaultFilesName.scripts), JSON.stringify(options));
+        fs.writeFile(path.join(cwd, defaultFilesName.scripts.conf.dev), JSON.stringify(options));
     });
 
 };
@@ -111,6 +113,6 @@ function createStylesConfFile() {
             sourceMap: answer.outputStyle
         };
 
-        fs.writeFile(path.join(cwd, defaultFilesName.styles), JSON.stringify(options));
+        fs.writeFile(path.join(cwd, defaultFilesName.styles.conf.dev), JSON.stringify(options));
     });
 }

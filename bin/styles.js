@@ -6,7 +6,8 @@ var args = process.argv.slice(1);
 var DEFAULT_CONFIG_FILE_NAME = require('./files.js').styles;
 var sass = require('node-sass');
 var configFile;
-var customConfigFile = path.join(process.cwd(), args[0] || DEFAULT_CONFIG_FILE_NAME);
+var env = args[0];
+var customConfigFile = path.join(process.cwd(), args[1] || DEFAULT_CONFIG_FILE_NAME);
 
 fs.exists(customConfigFile, function (exists) {
     if (exists) {
