@@ -3,7 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var q = require('q');
 var args = process.argv.slice(1);
-var DEFAULT_CONFIG_FILE_NAME = require('./files.js').styles;
+var DEFAULT_CONFIG_FILE_NAME = require('./dirigentfile.js').styles;
 var sass = require('node-sass');
 var configFile;
 var env = args[0];

@@ -5,12 +5,15 @@
   },
   "dependencies": {
     "node-sass": "^3.2.0",
+    "promise": "^7.0.4",
     "prompt": "^0.2.14",
     "q": "^1.4.1",
     "ts-loader": "^0.5.2"
   },
   "description": "",
   "devDependencies": {
+    "liftoff": "^2.1.0",
+    "typescript-require": "^0.2.9",
     "webpack": "^1.11.0"
   },
   "license": "ISC",

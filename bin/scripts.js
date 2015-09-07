@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-console.log(__filename);
+
 'use strict';
 var fs = require('fs');
 var path = require('path');
 var webpack = require('webpack');
 var args = process.argv.slice(2);
-var DEFAULT_CONFIG_FILE_NAME = require('./files.js').scripts;
+var DEFAULT_CONFIG_FILE_NAME = require('./dirigentfile.js').scripts;
 var configFile;
 var env = args[2];
 var customConfigFile = path.join(process.cwd(), args[3] || env + '.' + DEFAULT_CONFIG_FILE_NAME);
@@ -41,7 +41,7 @@ fs.exists(customConfigFile, function (exists) {
     if (exists) {
         configFile = require(customConfigFile);
     } else {
-        configFile = require('./'  + DEFAULT_CONFIG_FILE_NAME);
+        configFile = require('./' + DEFAULT_CONFIG_FILE_NAME);
     }
 
     for (var key in defaultOpt[env]) {
@@ -55,7 +55,7 @@ fs.exists(customConfigFile, function (exists) {
 
 function run() {
     var compiler = webpack(configFile);
-console.log(configFile);
+    console.log(configFile);
     compiler.run(function (err, stats) {
         if (err) {
             console.log(err);

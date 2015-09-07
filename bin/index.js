@@ -2,11 +2,22 @@
 
 'use strict';
 
+var Liftoff = require('liftoff');
+var dirigent = new Liftoff({
+    name: 'dirigent',
+    extensions: {
+        '.js': null,
+        '.json': null,
+        '.ts': 'typescript-register'
+    }
+});
+
 switch (process.argv[2]) {
     case 'init':
-        require('./init.js');
+        var init = require('./init.js');
+        dirigent.launch({}, init);
         break;
     case 'run':
-        require('./run.js');
+        require('./run.js')(dirigent);
         break;
 }

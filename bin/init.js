@@ -7,42 +7,42 @@ var path = require('path');
 var inquirer = require('inquirer');
 var defaultFilesName = require('./files');
 var cwd = process.cwd();
+
 var scripts = {
     name: 'scripts',
-    message: 'Would you like orchestrator to build your scripts?',
+    message: 'Would you like dirigent to build your scripts?',
     type: 'list',
     default: 'Yes',
     choices: [
-        {Yes: true},
-        {No: false}
+        { Yes: true },
+        { No: false }
     ]
 };
-
-inquirer.prompt(scripts, function (answer) {
-    if (answer.scripts) {
-        createScriptsConfFile();
-    }
-});
 
 var styles = {
     name: 'styles',
-    message: 'Would you like orchestrator to manage your styles?',
+    message: 'Would you like dirigent to manage your styles?',
     type: 'list',
     default: true,
     choices: [
-        {Yes: true},
-        {No: false}
+        { Yes: true },
+        { No: false }
     ]
 };
 
-inquirer.prompt(styles, function (answer) {
+function init() {
+    inquirer.prompt(styles, function (answer) {
+        if (answer.styles) {
+            createStylesConfFile();
+        }
+    });
 
-    if (answer.styles) {
-        createStylesConfFile();
-    }
-
-});
-
+    inquirer.prompt(scripts, function (answer) {
+        if (answer.scripts) {
+            createScriptsConfFile();
+        }
+    });
+}
 
 function createScriptsConfFile() {
 
@@ -116,3 +116,6 @@ function createStylesConfFile() {
         fs.writeFile(path.join(cwd, defaultFilesName.styles.conf.dev), JSON.stringify(options));
     });
 }
+
+
+module.exports = init;

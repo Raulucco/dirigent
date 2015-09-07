@@ -5,6 +5,6 @@ module.exports = ({
     entry: path.join(cwd, 'index.js'),
     output: {
         path: cwd,
-        filename: 'index.bundle.js'
+        filename: 'bundle.js'
     }
 });

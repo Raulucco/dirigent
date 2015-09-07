@@ -7,14 +7,14 @@ Now you can execute orchestrator from a prompt window.
 
 #USAGE#
 
-To start a new project run `orchestrator init`
+To start a new project run `dirigent init`
 Answer the required questions.
 
 ##Scripts##
 
-- To start development `orchestrator run scripts` or `orchestrator run scripts:dev`
-- To deploy `orchestrator run scripts:deploy`
+- To start development `dirigent run scripts` or `dirigent run scripts:dev`
+- To deploy `dirigent run scripts:deploy`
 
 ##Styles##
-- To start development `orchestrator run styles` or `orchestrator run styles:dev`
-- To deploy `orchestrator run styles:deploy`
+- To start development `dirigent run styles` or `dirigent run styles:dev`
+- To deploy `dirigent run styles:deploy`
