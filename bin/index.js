@@ -14,10 +14,10 @@ var dirigent = new Liftoff({
 
 switch (process.argv[2]) {
     case 'init':
-        var init = require('./init.js');
+        var init = require('./init/index.js');
         dirigent.launch({}, init);
         break;
     case 'run':
-        require('./run.js')(dirigent);
+        require('./run/index.js')(dirigent);
         break;
 }
