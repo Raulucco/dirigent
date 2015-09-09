@@ -16,9 +16,9 @@ module.exports = ({
         }
     },
     deps: [
-
-    ],
-    paths: [
-        __dirname
+        {
+            //name:
+            path: __dirname
+        }
     ]
 });

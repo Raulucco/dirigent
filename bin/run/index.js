@@ -3,30 +3,39 @@
 'use strict';
 var path = require('path');
 var fs = require('fs');
-var Promise = require('promise');
+var child_process = require('child_process');
 var files = {
     styles: 'styles.js',
     scripts: 'scripts.js'
 };
 
 function iterator(dirigent, cwd) {
-
-    fs.exists(path.join(cwd || process.cwd(), 'dirigentfile.js'), function (exists) {
+    cwd = cwd || process.cwd();
+    console.log(cwd);
+    fs.exists(path.join(cwd.path ? cwd.path : cwd, 'dirigentfile.js'), function (exists) {
         var config;
         if (exists) {
-            config = require(process.cwd(), 'dirigentfile.js');
+            
+            config = require(path.resolve(cwd.path ? cwd.path : cwd, 'dirigentfile.js'));
         } else {
-            config = require(path.join(__dirname, 'dirigentfile.js'));
+            config = require(path.join(__dirname, '../dirigentfile.js'));
         }
 
         for (var i = 0; i < config.deps.length; i++) {
-            dirigent.launch({}, resolveAction);
+            dirigent.launch({
+                cwd: config.deps[i].path
+            }, resolveAction);
             iterator(dirigent, config.deps[i]);
         }
     });
 }
 
-function resolveAction() {
+function resolveAction(env) {
+
+    if (process.cwd() !== path.resolve(env.cwd)) {
+        process.chdir(path.resolve(env.cwd));
+        console.log('Working directory changed to', env.cwd);
+    }
 
     switch (process.argv[3]) {
         case 'styles':
@@ -70,7 +79,7 @@ function resolveAction() {
 function createChildProcess(file, opts) {
 
     opts.unshift(file);
-    var command = child.execFile('node', opts);
+    var command = child_process.exec('node', opts);
 
     command.on('error', function (err) {
         console.log(err);

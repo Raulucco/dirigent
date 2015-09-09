@@ -15,6 +15,7 @@ var defaultOpt = {
         resolve: {
             extensions: ['', '.webpack.js', '.web.js', '.ts', '.js']
         },
+        cache: true,
         module: {
             loaders: [
                 { test: /\.ts$/, loader: 'ts-loader' }
@@ -29,6 +30,7 @@ var defaultOpt = {
         plugins: [
             new webpack.optimize.UglifyJsPlugin()
         ],
+        cache: true,
         module: {
             loaders: [
                 { test: /\.ts$/, loader: 'ts-loader' }
@@ -36,7 +38,8 @@ var defaultOpt = {
         }
     }
 };
-console.log(customConfigFile);
+
+//function init() {
 fs.exists(customConfigFile, function (exists) {
     if (exists) {
         configFile = require(customConfigFile);
@@ -53,6 +56,8 @@ fs.exists(customConfigFile, function (exists) {
     run();
 });
 
+//}
+
 function run() {
     var compiler = webpack(configFile);
     console.log(configFile);
@@ -64,3 +69,5 @@ function run() {
         }
     });
 }
+
+//module.exports = init;

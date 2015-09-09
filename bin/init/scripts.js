@@ -53,7 +53,7 @@ function createScriptsConfFile() {
             default: '0.0.0'
         },
         {
-            message: 'Hoiw\'s the author?',
+            message: 'How\'s the author?',
             name: 'author',
             type: 'string',
             default: ''
@@ -68,7 +68,7 @@ function createScriptsConfFile() {
             message: 'Which name have the entry point of your module?',
             name: 'entry',
             type: 'string',
-            default: 'index.js'
+            default: 'src/index.js'
         },
         {
             message: 'Which is the output path of your module?',
@@ -80,7 +80,7 @@ function createScriptsConfFile() {
             message: 'Which is the output file of your module?',
             name: 'outputFile',
             type: 'string',
-            default: 'bundle.js'
+            default: 'src/bundle.js'
         },
         {
             message: 'Will you use a transpiler for javascript files?',
@@ -142,17 +142,17 @@ function createScriptsConfFile() {
                 },
                 "files": [],
                 "exclude": ["node_modules", "bower_components", "libs", "vendors", "3rdParty"]
-            }));
+            }, null, indentation), encoding);
 
             options.resolve = {
                 extensions: ['', '.webpack.js', '.web.js', '.ts', '.js']
             };
 
             options.module = {
-                loaders: [{ test: /\.ts$/, loader: 'typescript-loader', exclude: excludes.join('|') }],
+                loaders: [{ test: '/\.ts$/', loader: 'typescript-loader', exclude: excludes.join('|') }],
                 preLoaders: [
                     {
-                        test: /\.ts$/,
+                        test: '/\.ts$/',
                         exclude: excludes.join('|'),
                         loader: "tslint"
                     }
@@ -166,11 +166,11 @@ function createScriptsConfFile() {
             options.module = {
                 loaders: [
                     {
-                        test: /\.jsx?$/,
+                        test: '/\.jsx?$/',
                         exclude: /(node_modules|bower_components)/,
                         loader: 'babel?optional[]=runtime&stage=0'
                     },
-                    { test: /\.js$/, loader: "eslint-loader", exclude: excludes.join('|') }
+                    { test: '/\.js$/', loader: "eslint-loader", exclude: excludes.join('|') }
                 ]
             };
         } else if (answer.transpiler === scriptsTranspilers[2]) {
@@ -178,12 +178,12 @@ function createScriptsConfFile() {
 
             options.module = {
                 loaders: [
-                    { test: /\.coffee$/, loader: "coffee-loader" },
-                    { test: /\.(coffee\.md|litcoffee)$/, loader: "coffee-loader?literate" }
+                    { test: '/\.coffee$/', loader: "coffee-loader" },
+                    { test: '/\.(coffee\.md|litcoffee)$/', loader: "coffee-loader?literate" }
                 ],
                 preLoaders: [
                     {
-                        test: /\.coffee$/,
+                        test: '/\.coffee$/',
                         exclude: excludes.join('|'),
                         loader: "coffeelint-loader"
                     }
@@ -195,7 +195,7 @@ function createScriptsConfFile() {
             options.module = {
                 preLoaders: [
                     {
-                        test: /\.js$/,
+                        test: '/\.js$/',
                         exclude: excludes.join('|'),
                         loader: "jshint-loader"
                     }
@@ -203,16 +203,20 @@ function createScriptsConfFile() {
             };
         }
 
-        var devContent = 'var webpack = require(\'webpack\');\n module.exports = (' + JSON.stringify(options, null, indentation) + ');\n';
-        devContent.replace(/"plugins":\s\[\]/, '"plugins":\n[ new webpack.optimize.UglifyJsPlugin() ]');
-        devContent.replace(/"exclude":\s([^,\n]+)/gm, '"exclude": new RegExp($1)');
+        var devContent = 'var webpack = require(\'webpack\');\nmodule.exports = (' + JSON.stringify(options, null, indentation) + ');\n';
+
+        console.log(devContent);
+
+        devContent = devContent.replace(/^(\s*)"plugins":\s\[\](,?)$/mg, '$1"plugins": [ new webpack.optimize.UglifyJsPlugin() ]$2');
+        devContent = devContent.replace(/^(\s*)"exclude":\s([^,\n]+)(,?)$/gm, '$1"exclude": new RegExp($2)$3');
+        devContent = devContent.replace(/^(\s*)"test":\s"\/([^,\n]+)\/(,?)"/gm, '$1"test": new RegExp("$2")$3');
         fs.writeFile(path.join(cwd, defaultFilesName.scripts.conf.dev),
             devContent,
-            encoding, function (err) {
-                if (!err) {
+            encoding, function (error) {
+                if (!error) {
 
-                    devContent.replace(/,\n"watch":\strue/, '');
-                    devContent.replace(/,\n"devtool":\s[^,]+/, '');
+                    devContent = devContent.replace(/,\n"watch":\strue/, '');
+                    devContent = devContent.replace(/,\n"devtool":\s[^,]+/, '');
 
                     fs.writeFile(
                         path.join(cwd, defaultFilesName.scripts.conf.deploy),
@@ -220,7 +224,7 @@ function createScriptsConfFile() {
                         encoding);
 
                 } else {
-                    throw new Error(err);
+                    throw error;
                 }
             });
 
