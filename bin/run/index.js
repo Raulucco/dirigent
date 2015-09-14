@@ -5,8 +5,8 @@ var path = require('path');
 var fs = require('fs');
 var child_process = require('child_process');
 var files = {
-    styles: 'styles.js',
-    scripts: 'scripts.js'
+    styles: './styles.js',
+    scripts: './scripts.js'
 };
 
 function iterator(dirigent, cwd) {
@@ -15,18 +15,22 @@ function iterator(dirigent, cwd) {
     fs.exists(path.join(cwd.path ? cwd.path : cwd, 'dirigentfile.js'), function (exists) {
         var config;
         if (exists) {
-            
+
             config = require(path.resolve(cwd.path ? cwd.path : cwd, 'dirigentfile.js'));
         } else {
             config = require(path.join(__dirname, '../dirigentfile.js'));
         }
 
-        for (var i = 0; i < config.deps.length; i++) {
-            dirigent.launch({
-                cwd: config.deps[i].path
-            }, resolveAction);
-            iterator(dirigent, config.deps[i]);
+        if (config.hasOwnProperty('deps')) {
+            for (var i = 0; i < config.deps.length; i++) {
+                dirigent.launch({
+                    cwd: config.deps[i].path
+                }, resolveAction);
+                iterator(dirigent, config.deps[i]);
+            }
         }
+
+        dirigent.launch({}, resolveAction);
     });
 }
 
@@ -37,38 +41,38 @@ function resolveAction(env) {
         console.log('Working directory changed to', env.cwd);
     }
 
+    console.log(process.argv[3]);
     switch (process.argv[3]) {
         case 'styles':
         case 'styles:dev':
-            //createChildProcess(path.join(process.cwd(),  files.styles));
             var opts = process.argv.slice(1);
             opts.unshift('dev');
-            createChildProcess(path.join(process.cwd(), files.styles), opts);
+            createChildProcess(files.styles, opts, 'dev');
             break;
         case 'scripts':
         case 'scripts:dev':
             var opts = process.argv.slice(1);
             opts.unshift('dev');
-            createChildProcess(path.join(process.cwd(), files.scripts), opts);
+            createChildProcess(files.scripts, opts, 'dev');
             break;
         case 'scripts:deploy':
             var opts = process.argv.slice(1);
             opts.unshift('deploy');
-            createChildProcess(path.join(process.cwd(), files.scripts), opts);
+            createChildProcess(files.scripts, opts, 'deploy');
             break;
         case 'styles:deploy':
             var opts = process.argv.slice(1);
             opts.unshift('deploy');
-            createChildProcess(path.join(process.cwd(), files.styles), opts);
+            createChildProcess(files.styles, opts, 'deploy');
             break;
         case 'dev':
-            createChildProcess(path.join(process.cwd(), files.scripts), process.argv.slice(1));
-            createChildProcess(path.join(process.cwd(), files.styles), process.argv.slice(1));
+            createChildProcess(files.scripts, process.argv.slice(1), 'dev');
+            createChildProcess(files.styles, process.argv.slice(1), 'dev');
             break;
         case 'deploy':
             opts.unshift('deploy');
-            createChildProcess(path.join(process.cwd(), files.scripts), process.argv.slice(1));
-            createChildProcess(path.join(process.cwd(), files.styles), process.argv.slice(1));
+            createChildProcess(files.scripts, process.argv.slice(1), 'deploy');
+            createChildProcess(files.styles, process.argv.slice(1), 'deploy');
             break;
         default:
             throw 'Error: ' + process.argv.slice(2) + ' is not a valid option.\n Read the README';
@@ -76,20 +80,14 @@ function resolveAction(env) {
 
 }
 
-function createChildProcess(file, opts) {
+function createChildProcess(file, opts, env) {
+    opts.unshift(path.resolve(__dirname, file));
+    child_process.exec('node ' + opts.join(' '), { env: { dirigentMode: env, modulePath: process.cwd() } }, function (error, stdout, stderr) {
 
-    opts.unshift(file);
-    var command = child_process.exec('node', opts);
-
-    command.on('error', function (err) {
-        console.log(err);
+        console.error(stderr);
+        console.log(stdout);
     });
 
-    command.stdout.on('data', function (data) {
-        console.log(data.toString());
-    });
-
-    command.stdout.pipe(process.stdout);
 }
 
 module.exports = iterator;

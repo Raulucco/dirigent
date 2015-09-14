@@ -9,8 +9,6 @@ var configFile;
 var env = args[0];
 var customConfigFile = path.join(process.cwd(), args[1] || DEFAULT_CONFIG_FILE_NAME);
 
-
-//function init() {
 fs.exists(customConfigFile, function (exists) {
     if (exists) {
         configFile = require(customConfigFile);
@@ -20,8 +18,6 @@ fs.exists(customConfigFile, function (exists) {
 
     run();
 });
-
-//}
 
 function run() {
     sass.render(configFile, function (err, result) {
@@ -57,5 +53,3 @@ function writeOutputFile(result) {
         console.log('Hurra');
     });
 }
-
-//module.exports = init;
