@@ -4,12 +4,12 @@
 
 var fs = require('fs');
 var path = require('path');
-var inquirer = require('inquire');
+var inquirer = require('inquirer');
 var _ = require('lodash');
 
 var stringify = require('../stringify.js');
-var defaultFilesName = require('../dirigentfile');
-var packageFileProps = require('./base/package-file.js');
+var defaultFilesName = require('./filenames.js');
+var packageFileProps = require('./base-package-file.js');
 var scriptsTranspilers = require('./questions/choices/transpilers.js');
 var excludes = require('./questions/choices/exclude.js').dirs;
 
@@ -138,7 +138,7 @@ module.exports = function createScriptsConfFile() {
             /^(\s*)"test":\s"\/([^,\n]+)\/(,?)"/gm,
             '$1"test": /$2/$3');
 
-        fs.writeFile(path.join(cwd, defaultFilesName.scripts.conf.dev),
+        fs.writeFile(path.join(cwd, defaultFilesName.conf.dev),
             devContent,
             encoding, function (error) {
                 if (!error) {
@@ -147,7 +147,7 @@ module.exports = function createScriptsConfFile() {
                     devContent = devContent.replace(/,\n"devtool":\s[^,]+/, '');
 
                     fs.writeFile(
-                        path.join(cwd, defaultFilesName.scripts.conf.deploy),
+                        path.join(cwd, defaultFilesName.conf.deploy),
                         devContent,
                         encoding);
 

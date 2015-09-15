@@ -45,7 +45,7 @@ module.exports =[
             message: 'Which is the output path of your module?',
             name: 'outputPath',
             type: 'string',
-            default: cwd
+            default: process.cwd()
         },
         {
             message: 'Which is the output file of your module?',
@@ -58,7 +58,7 @@ module.exports =[
             name: 'transpiler',
             type: 'list',
             default: 0,
-            choices: scriptsTranspilers
+            choices: transpilers
         }
 
     ];
