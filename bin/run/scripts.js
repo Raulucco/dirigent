@@ -1,20 +1,22 @@
 #!/usr/bin/env node
-console.log(__filename);
+
 'use strict';
+
 var fs = require('fs');
 var path = require('path');
 var webpack = require('webpack');
 var args = process.argv.slice(2);
-var DEFAULT_CONFIG_FILE_NAME = require('./files.js').scripts;
+var DEFAULT_CONFIG_FILE_NAME = require('../dirigentfile.js').scripts;
 var configFile;
 var env = args[2];
-var customConfigFile = path.join(process.cwd(), args[3] || env + '.' + DEFAULT_CONFIG_FILE_NAME);
+var customConfigFile = path.join(process.env.modulePath, args[0] + '.webpack.config.js');
 var defaultOpt = {
     dev: {
         devtool: 'source-map',
         resolve: {
             extensions: ['', '.webpack.js', '.web.js', '.ts', '.js']
         },
+        cache: true,
         module: {
             loaders: [
                 { test: /\.ts$/, loader: 'ts-loader' }
@@ -29,6 +31,7 @@ var defaultOpt = {
         plugins: [
             new webpack.optimize.UglifyJsPlugin()
         ],
+        cache: true,
         module: {
             loaders: [
                 { test: /\.ts$/, loader: 'ts-loader' }
@@ -36,12 +39,16 @@ var defaultOpt = {
         }
     }
 };
-console.log(customConfigFile);
+
 fs.exists(customConfigFile, function (exists) {
     if (exists) {
         configFile = require(customConfigFile);
     } else {
-        configFile = require('./'  + DEFAULT_CONFIG_FILE_NAME);
+        configFile = require(
+            path.resolve(
+                __dirname,
+                '../' + DEFAULT_CONFIG_FILE_NAME.conf[process.env.dirigentMode])
+            );
     }
 
     for (var key in defaultOpt[env]) {
@@ -55,12 +62,14 @@ fs.exists(customConfigFile, function (exists) {
 
 function run() {
     var compiler = webpack(configFile);
-console.log(configFile);
+
     compiler.run(function (err, stats) {
         if (err) {
             console.log(err);
         } else {
-            console.log(stats);
+            console.log(stats.toString());
         }
     });
+
+
 }

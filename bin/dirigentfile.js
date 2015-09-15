@@ -15,5 +15,10 @@ module.exports = ({
             deploy: 'env.libsass.config.js'
         }
     },
-    gulp: 'gulpfile.js'
+    deps: [
+        {
+            //name:
+            path: __dirname
+        }
+    ]
 });
