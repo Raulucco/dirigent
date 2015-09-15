@@ -45,7 +45,6 @@ module.exports = function createScriptsConfFile() {
         if (answer.transpiler === scriptsTranspilers[0]) {
             packagejson.devDependencies.tsd = '^0.6.4';
             packagejson.devDependencies['tslint-loader'] = '^1.0.1';
-            //packagejson.devDependencies['typescript-loader'] = '^1.1.3';
             packagejson.devDependencies['ts-loader'] = '^0.5.5';
             packagejson.devDependencies.typescript = '^1.5.3';
 
