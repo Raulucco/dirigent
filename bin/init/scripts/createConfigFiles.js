@@ -45,7 +45,8 @@ module.exports = function createScriptsConfFile() {
         if (answer.transpiler === scriptsTranspilers[0]) {
             packagejson.devDependencies.tsd = '^0.6.4';
             packagejson.devDependencies['tslint-loader'] = '^1.0.1';
-            packagejson.devDependencies['typescript-loader'] = '^1.1.3';
+            //packagejson.devDependencies['typescript-loader'] = '^1.1.3';
+            packagejson.devDependencies['ts-loader'] = '^0.5.5';
             packagejson.devDependencies.typescript = '^1.5.3';
 
             fs.writeFile(path.join(cwd, 'tsdconfig.json'),
@@ -68,7 +69,7 @@ module.exports = function createScriptsConfFile() {
             options.module = {
                 loaders: [{
                     test: '/\.ts$/',
-                    loader: 'typescript-loader',
+                    loader: 'ts-loader',
                     exclude: excludes.join('|')
                 }],
                 preLoaders: [{
@@ -129,11 +130,17 @@ module.exports = function createScriptsConfFile() {
         var devContent = 'var webpack = require(\'webpack\');\nmodule.exports = (' + stringify(options) + ');\n';
 
         devContent = devContent.replace(
+            /^(\s+)"entry":\s"(\w+\.\w+)"(,)?$/m,
+            '$1"entry": __dirname + "$2"$3');
+
+        devContent = devContent.replace(
             /^(\s*)"plugins":\s\[\](,?)$/mg,
             '$1"plugins": [ new webpack.optimize.UglifyJsPlugin() ]$2');
+
         devContent = devContent.replace(
             /^(\s*)"exclude":\s"([^,\n"]+)"(,?)$/gm,
             '$1"exclude": /$2/$3');
+
         devContent = devContent.replace(
             /^(\s*)"test":\s"\/([^,\n]+)\/(,?)"/gm,
             '$1"test": /$2/$3');

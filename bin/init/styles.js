@@ -78,5 +78,4 @@ function createStylesConfFile() {
     });
 }
 
-
 module.exports = init;

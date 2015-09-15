@@ -12,21 +12,25 @@ var files = {
 function iterator(dirigent, cwd) {
     cwd = cwd || process.cwd();
     console.log(cwd);
+
     fs.exists(path.join(cwd.path ? cwd.path : cwd, 'dirigentfile.js'), function (exists) {
         var config;
         if (exists) {
 
             config = require(path.resolve(cwd.path ? cwd.path : cwd, 'dirigentfile.js'));
         } else {
-            config = require(path.join(__dirname, '../dirigentfile.js'));
+            config = require(path.join(__dirname, 'conf/dirigentfile.js'));
         }
 
         if (config.hasOwnProperty('deps')) {
             for (var i = 0; i < config.deps.length; i++) {
-                dirigent.launch({
-                    cwd: config.deps[i].path
-                }, resolveAction);
-                iterator(dirigent, config.deps[i]);
+                if (__dirname !== config.deps[i].path) {
+                    dirigent.launch({
+                        cwd: config.deps[i].path
+                    }, resolveAction);
+
+                    iterator(dirigent, config.deps[i]);
+                }
             }
         }
 
@@ -40,28 +44,28 @@ function resolveAction(env) {
         process.chdir(path.resolve(env.cwd));
         console.log('Working directory changed to', env.cwd);
     }
+    var opts;
 
-    console.log(process.argv[3]);
     switch (process.argv[3]) {
         case 'styles':
         case 'styles:dev':
-            var opts = process.argv.slice(1);
+            opts = process.argv.slice(1);
             opts.unshift('dev');
             createChildProcess(files.styles, opts, 'dev');
             break;
         case 'scripts':
         case 'scripts:dev':
-            var opts = process.argv.slice(1);
+            opts = process.argv.slice(1);
             opts.unshift('dev');
             createChildProcess(files.scripts, opts, 'dev');
             break;
         case 'scripts:deploy':
-            var opts = process.argv.slice(1);
+            opts = process.argv.slice(1);
             opts.unshift('deploy');
             createChildProcess(files.scripts, opts, 'deploy');
             break;
         case 'styles:deploy':
-            var opts = process.argv.slice(1);
+            opts = process.argv.slice(1);
             opts.unshift('deploy');
             createChildProcess(files.styles, opts, 'deploy');
             break;
@@ -82,12 +86,16 @@ function resolveAction(env) {
 
 function createChildProcess(file, opts, env) {
     opts.unshift(path.resolve(__dirname, file));
-    child_process.exec('node ' + opts.join(' '), { env: { dirigentMode: env, modulePath: process.cwd() } }, function (error, stdout, stderr) {
+    var child = child_process.exec(
+        'node ' + opts.join(' '),
+        { env: { dirigentMode: env, modulePath: process.cwd() } });
 
-        console.error(stderr);
-        console.log(stdout);
+    child.stderr.pipe(process.stderr);
+    child.stdout.pipe(process.stdout);
+
+    child.on('exit', function () {
+        process.exit();
     });
-
 }
 
 module.exports = iterator;

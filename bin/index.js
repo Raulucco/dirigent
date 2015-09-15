@@ -20,12 +20,6 @@ switch (process.argv[2]) {
     case 'run':
         require('./run/index.js')(dirigent);
         break;
-    case 'setup:karma:typescript':
-        require('./init/scripts/karma/typescript.js');
-        break;
-    case 'setup:karma:es6':
-        require('./init/scripts/karma/typescript.js');
-        break;
     case 'setup:karma':
         require('./init/scripts/karma/default.js');
         break;
