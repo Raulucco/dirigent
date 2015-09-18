@@ -22,7 +22,8 @@ module.exports = function createScriptsConfFile() {
 
     inquirer.prompt(schema, function (answer) {
         var options = {
-            entry: answer.entry,
+            context: cwd,
+            entry: /^\//.test(answer.entry) ? answer.entry.replace(/^\//, '') : answer.entry,
             output: {
                 path: answer.outputPath,
                 filename: answer.outputFile

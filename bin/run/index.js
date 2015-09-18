@@ -41,6 +41,7 @@ function iterator(dirigent, cwd) {
 function resolveAction(env) {
 
     if (process.cwd() !== path.resolve(env.cwd)) {
+        console.log('Working directory changed to', env.cwd);
         process.chdir(path.resolve(env.cwd));
         console.log('Working directory changed to', env.cwd);
     }
@@ -93,9 +94,18 @@ function createChildProcess(file, opts, env) {
     child.stderr.pipe(process.stderr);
     child.stdout.pipe(process.stdout);
 
-    child.on('exit', function () {
-        process.exit();
+    child.on('error', function () {
+        killProcess(child.pid);
     });
+}
+
+function killProcess(pid) {
+    if (/^win/.test(process.platform)) {
+        child_process.exec('taskkill /PID' + pid + ' /T /F');
+    } else {
+        process.kill(pid);
+    }
+
 }
 
 module.exports = iterator;

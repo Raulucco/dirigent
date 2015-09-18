@@ -16,8 +16,8 @@ module.exports = ({
         }
     },
     deps: [
-        {
+        /*{
             path: process.cwd()
-        }
+        }*/
     ]
 });
