@@ -15,9 +15,7 @@ module.exports = ({
             deploy: 'env.libsass.config.js'
         }
     },
-    deps: [
-        /*{
-            path: process.cwd()
-        }*/
-    ]
+    /* deps: [
+         process.cwd()
+     ]*/
 });

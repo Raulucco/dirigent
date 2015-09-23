@@ -7,14 +7,15 @@ var path = require('path');
 var util = require('util');
 var child_process = require('child_process');
 var webpack = require('webpack');
+var logger = require('../logUtils.js');
 var args = process.argv.slice(2);
 var DEFAULT_CONFIG_FILE_NAME = require('./conf/dirigentfile.js').scripts;
 var configFile;
 var env = args[4] || 'dev';
-var customConfigFile = path.join(process.env.modulePath, args[0] + '.webpack.config.js');
+var customConfigFile = path.join(process.cwd(), args[0] + '.webpack.config.js');
 var defaultOpts = require('./conf/webpack.config.js');
 
-util.log('Start scripts building on => ' + process.cwd());
+util.log('Starting scripts building on => ' + process.cwd() + '\n');
 
 fs.access(customConfigFile, fs.R_OK, function (error) {
     if (!error) {
@@ -26,11 +27,8 @@ fs.access(customConfigFile, fs.R_OK, function (error) {
         }
 
     } else {
-        process.stdout.write('\n');
-        process.stderr.write(error.message);
-        process.stdout.write('\n');
+        logger.logErrorMessage(error);
         util.log('Switch default configuration ... \n ' + env + '\n' + JSON.stringify(defaultOpts[env], null, 2));
-        process.stdout.write('\n');
         configFile = defaultOpts[env];
     }
 
@@ -40,34 +38,33 @@ fs.access(customConfigFile, fs.R_OK, function (error) {
         fs.watch(process.cwd(), options, function (event, filename) {
             run();
             var child = child_process.exec('npm test');
-            process.stdout.write('\n');
+
             process.stdout.write(filename + ': changed');
-            process.stdout.write('\n');
+
             child.stderr.pipe(process.stderr);
             child.stdout.pipe(process.stdout);
+            child.on('error', function (event) {
+                logger.logObject(event, 'Event ' + child.pid);
+                child.exit(1);
+            });
         });
+    } else {
+        run();
     }
-
-    run();
 });
 
 function run() {
-    console.log(configFile, process.env);
-
     if (!configFile) {
         process.abort();
     }
 
     var compiler = webpack(configFile);
-
-    process.stdout.write('\n');
-    //util.log(JSON.stringify(configFile, null, 2));
-    process.stdout.write('\n');
+    logger.logObject(configFile, 'Webpack config ' + process.pid);
     compiler.run(function (err, stats) {
         if (err) {
-            console.log(err);
+            logger.logErrorMessage(err);
         } else {
-            console.log(stats.toString());
+            logger.logObject(stats, 'Webpack stats')
         }
     });
 
