@@ -5,29 +5,32 @@
 var fs = require('fs');
 var path = require('path');
 var inquirer = require('inquirer');
+var Q = require('q');
 var _ = require('lodash');
-
 var stringify = require('../stringify.js');
+var decorateJson = require('../decorateJsonConf.js');
 var defaultFilesName = require('./filenames.js');
 var packageFileProps = require('./base-package-file.js');
 var scriptsTranspilers = require('./questions/choices/transpilers.js');
 var excludes = require('./questions/choices/exclude.js').dirs;
-
-var encoding = { encoding: 'utf8' };
 var cwd = process.cwd();
+var ioOptions;
 
-module.exports = function createScriptsConfFile() {
-
+module.exports = function createScriptsConfFile(_ioOptions) {
+    ioOptions = _ioOptions;
     var schema = require('./questions/index.js');
+    var defer = Q.defer();
+    var promisses = [];
 
     inquirer.prompt(schema, function (answer) {
         var options = {
+            context: cwd,
             entry: answer.entry,
             output: {
                 path: answer.outputPath,
                 filename: answer.outputFile
             },
-            watch: true,
+            watch: false,
             devtool: 'source-map',
             plugins: []
         };
@@ -45,7 +48,7 @@ module.exports = function createScriptsConfFile() {
         if (answer.transpiler === scriptsTranspilers[0]) {
             packagejson.devDependencies.tsd = '^0.6.4';
             packagejson.devDependencies['tslint-loader'] = '^1.0.1';
-            packagejson.devDependencies['typescript-loader'] = '^1.1.3';
+            packagejson.devDependencies['ts-loader'] = '^0.5.5';
             packagejson.devDependencies.typescript = '^1.5.3';
 
             fs.writeFile(path.join(cwd, 'tsdconfig.json'),
@@ -59,7 +62,9 @@ module.exports = function createScriptsConfFile() {
                     },
                     files: [],
                     exclude: excludes
-                }), encoding);
+                }), ioOptions);
+            var tslintjson = require('./linting/ts.js');
+            fs.writeFile(path.join(cwd, 'tslint.json'), stringify(tslintjson), ioOptions);
 
             options.resolve = {
                 extensions: ['', '.webpack.js', '.web.js', '.ts', '.js']
@@ -68,7 +73,7 @@ module.exports = function createScriptsConfFile() {
             options.module = {
                 loaders: [{
                     test: '/\.ts$/',
-                    loader: 'typescript-loader',
+                    loader: 'ts-loader',
                     exclude: excludes.join('|')
                 }],
                 preLoaders: [{
@@ -126,36 +131,105 @@ module.exports = function createScriptsConfFile() {
             };
         }
 
-        var devContent = 'var webpack = require(\'webpack\');\nmodule.exports = (' + stringify(options) + ');\n';
+        promisses.push(writeWebPackConfFiles(options));
+        promisses.push(writePackageJson(packagejson));
+        promisses.push(writeDirigentConfFile());
 
-        devContent = devContent.replace(
-            /^(\s*)"plugins":\s\[\](,?)$/mg,
-            '$1"plugins": [ new webpack.optimize.UglifyJsPlugin() ]$2');
-        devContent = devContent.replace(
-            /^(\s*)"exclude":\s"([^,\n"]+)"(,?)$/gm,
-            '$1"exclude": /$2/$3');
-        devContent = devContent.replace(
-            /^(\s*)"test":\s"\/([^,\n]+)\/(,?)"/gm,
-            '$1"test": /$2/$3');
-
-        fs.writeFile(path.join(cwd, defaultFilesName.conf.dev),
-            devContent,
-            encoding, function (error) {
-                if (!error) {
-
-                    devContent = devContent.replace(/,\n"watch":\strue/, '');
-                    devContent = devContent.replace(/,\n"devtool":\s[^,]+/, '');
-
-                    fs.writeFile(
-                        path.join(cwd, defaultFilesName.conf.deploy),
-                        devContent,
-                        encoding);
-
-                } else {
-                    throw error;
-                }
-            });
-
-        fs.writeFile(path.join(cwd, 'package.json'), stringify(packagejson), encoding);
+        Q.all(promisses).then(function () {
+            defer.resolve(arguments);
+        }, function () {
+            defer.reject(arguments);
+        });
     });
+
+    return defer.promise;
 };
+
+function writeWebPackConfFiles(options) {
+    var devContent = 'var webpack = require(\'webpack\');\n' + decorateJson(options);
+
+    devContent = normalizeEntry(devContent);
+    devContent = normalizePlugins(devContent);
+    devContent = normalizeExclude(devContent);
+    devContent = normalizeTest(devContent);
+
+    fs.writeFile(path.join(cwd, defaultFilesName.dev),
+        devContent,
+        ioOptions, function (error) {
+            if (error) {
+                throw error;
+                process.exit(1);
+            }
+
+            devContent = devContent
+                .replace(/,\n"watch":\strue/, '')
+                .replace(/,\n"devtool":\s[^,]+/, '');
+
+            fs.writeFile(
+                path.join(
+                    cwd, defaultFilesName.deploy),
+                devContent, ioOptions);
+        });
+}
+
+function normalizeEntry(str) {
+    return str.replace(/^(\s+)"entry":\s"(\w+\.\w+)"(,)?$/m,
+        '$1"entry": __dirname + "$2"$3');
+}
+
+function normalizePlugins(str) {
+    return str.replace(/^(\s*)"plugins":\s\[\](,?)$/mg,
+        '$1"plugins": [ new webpack.optimize.UglifyJsPlugin() ]$2')
+}
+
+function normalizeExclude(str) {
+    return str.replace(/^(\s*)"exclude":\s"([^,\n"]+)"(,?)$/gm,
+        '$1"exclude": /$2/$3');
+}
+
+function normalizeTest(str) {
+    return str.replace(/^(\s*)"test":\s"\/([^,\n]+)\/(,?)"/gm,
+        '$1"test": /$2/$3');
+}
+
+function writePackageJson(packagejson) {
+    var defer = Q.defer();
+    fs.writeFile(
+        path.join(cwd, 'package.json'),
+        stringify(packagejson), ioOptions,
+        function (err) {
+            if (err) {
+                defer.reject(err);
+            } else {
+                defer.resolve(0);
+            }
+
+        });
+    return defer.promise;
+}
+
+function writeDirigentConfFile() {
+    var dirigentFile = path.join(cwd, 'dirigentfile.js');
+    var defer = Q.defer();
+    try {
+        var dirigentFileJson = require(dirigentFile);
+        dirigentFileJson.scripts = defaultFilesName;
+        fs.writeFile(dirigentFile,
+            decorateJson(dirigentFileJson), ioOptions, resolvePromise);
+    } catch (err) {
+        process.stderr.write(err.message);
+        fs.writeFile(dirigentFile,
+            decorateJson({ scripts: defaultFilesName }), ioOptions, resolvePromise);
+    }
+
+    function resolvePromise(err) {
+        if (err) {
+            process.stderr.write('\n' + err.message + '\n');
+            defer.reject(err);
+            process.exit(1);
+        }
+        defer.resolve(0);
+    }
+
+    return defer.promise;
+}

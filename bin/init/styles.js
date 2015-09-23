@@ -6,9 +6,11 @@ var fs = require('fs');
 var path = require('path');
 var inquirer = require('inquirer');
 var Q = require('q');
-var defaultFilesName = require('../dirigentfile');
+var defaultFilesName = require('./styles/filenames.js');
 var cwd = process.cwd();
 var choices = ["Yes", "No"];
+var stringify = require('./stringify.js');
+var ioOptions = require('./IO-options.js');
 
 var styles = {
     name: 'styles',
@@ -18,10 +20,9 @@ var styles = {
     choices: choices
 };
 
-var encoding = { encoding: 'utf8' };
 var styleDefer = Q.defer();
 
-function init() {
+module.exports = function init() {
     console.log('\nStyles\n');
     inquirer.prompt(styles, function (answer) {
         if (answer.styles === choices[0]) {
@@ -35,8 +36,7 @@ function init() {
 
 function createStylesConfFile() {
 
-    var schema = [
-        {
+    var schema = [{
             message: 'Which file is the entry point for your module style\'s',
             name: 'file',
             type: 'string',
@@ -60,8 +60,7 @@ function createStylesConfFile() {
             type: 'list',
             choices: choices,
             default: 0
-        }
-    ];
+        }];
 
     inquirer.prompt(schema, function (answer) {
         var options = {
@@ -71,12 +70,24 @@ function createStylesConfFile() {
         };
 
         fs.writeFile(path.join(cwd, defaultFilesName.styles.conf.dev),
-            'module.exports = (' + JSON.stringify(options, null, 2) + ');\n', encoding, function () {
+            'module.exports = (' + stringify(options) + ');\n', ioOptions, function () {
 
                 styleDefer.resolve(arguments);
             });
+
+        try {
+            var dirigentFile = path.join(cwd, 'dirigentfile.js');
+            var dirigentFileJson = require(dirigentFile);
+            dirigentFileJson.styles = defaultFilesName;
+            fs.writeFile(
+                dirigentFile,
+                ['module.exports = (', stringify(dirigentFileJson), + ')};'].join('\n'),
+                ioOptions);
+        } catch (err) {
+            process.stderr.write(err);
+            fs.writeFile(dirigentFile,
+                ['module.exports = (', stringify({ scripts: defaultFilesName }), + ')};'].join('\n'), ioOptions);
+        }
+
     });
 }
-
-
-module.exports = init;

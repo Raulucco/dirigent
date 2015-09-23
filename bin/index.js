@@ -2,31 +2,35 @@
 
 'use strict';
 
-var Liftoff = require('liftoff');
-var dirigent = new Liftoff({
-    name: 'dirigent',
-    extensions: {
-        '.js': null,
-        '.json': null,
-        '.ts': 'typescript-register'
-    }
-});
+var fs = require('fs');
+var path = require('path');
 
 switch (process.argv[2]) {
     case 'init':
-        var init = require('./init/index.js');
-        dirigent.launch({}, init);
+        console.log('Running initialization of module');
+        require('./init/index.js')();
         break;
     case 'run':
-        require('./run/index.js')(dirigent);
-        break;
-    case 'setup:karma:typescript':
-        require('./init/scripts/karma/typescript.js');
-        break;
-    case 'setup:karma:es6':
-        require('./init/scripts/karma/typescript.js');
+        console.log('Running compilation of module');
+        require('./run/index.js');
         break;
     case 'setup:karma':
+        console.log('Setup karma of module');
         require('./init/scripts/karma/default.js');
         break;
+    default:
+        console.log('Unable to take an action => \n', process.argv);
+        process.stderr.write('No action => ' + process.argv.join('\n\t') + '\n');
+        console.log(process.argv, process.cwd());
+        fs.readFile(path.join(__dirname, '../README.md'), function (err, data) {
+            if (err) throw err;
+
+            process.stdout.write(data.toString().replace(/\[([^\]]+)\]\([^\)]+\)/gm, '$1'));
+
+            process.exit(1);
+        });
 }
+
+process.on('error', function () {
+    process.exit(1);
+});
