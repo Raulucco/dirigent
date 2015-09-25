@@ -3,7 +3,7 @@
 'use strict';
 
 var transpilers = require('./choices/transpilers.js');
-var pathChunks = encodeURIComponent(process.cwd()).split(/%3A%2F|%3A%5C|%3A/);
+var pathChunks = encodeURIComponent(process.cwd()).split(/%2F|%3A%2F|%3A%5C|%3A/);
 module.exports = [{
         message: 'How is your module call?',
         name: 'moduleName',

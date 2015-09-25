@@ -5,11 +5,11 @@
 var Q = require('q');
 var inquirer = require('inquirer');
 var choices = ["Yes", "No"];
-var createScriptsConfFile = require('./scripts/createConfigFiles.js');
+var createScriptsConfFile = require('./createConfigFiles.js');
 var ioOptions = require('./IO-options.js');
 var defer = Q.defer();
 
-var scripts = {
+var question = {
     name: 'scripts',
     message: 'Would you like dirigent to build your scripts?',
     type: 'list',
@@ -17,20 +17,23 @@ var scripts = {
     choices: choices
 };
 
-module.exports = function init() {
+function init() {
     process.stdout.write('\nScripts\n');
-    inquirer.prompt(scripts, function (answer) {
+    inquirer.prompt(question, function (answer) {
         if (answer.scripts === choices[0]) {
-            Q.when(createScriptsConfFile(ioOptions))
+           Q.when(createScriptsConfFile(ioOptions))
                 .then(function (result) {
-                    defer.resolve(result);
-                }, function (error) {
-                    defer.reject(error);
-                });
+                    defer.resolve(choices[0]);
+               }, function (error) {
+                   defer.reject(error);
+               }).done();
         } else {
-            defer.reject(choices[1]);
+            defer.reject(answer.scripts);
         }
     });
 
     return defer.promise;
-}
+
+};
+
+module.exports = init;
